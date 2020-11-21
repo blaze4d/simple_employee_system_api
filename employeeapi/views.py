@@ -9,11 +9,12 @@ from .models import Employee, EmployeeArchive
 @api_view(['GET'])
 def apiOverview(request):
     api_urls = {
-        'List': '/employee-list/',
-        'Detail View': '/employee-detail/<str:id>/',
-        'Create': '/employee-create/',
-        'Update': '/employee-update/',
-        'Archive': '/employee-archive/<str:id>/'
+        'Overview': '/api',
+        'List': '/api/employee-list/',
+        'Detail View': '/api/employee-detail/<str:id>/',
+        'Create': '/api/employee-create/',
+        'Update': '/api/employee-update/',
+        'Archive': '/api/employee-archive/<str:id>/'
     }
     return Response(api_urls)
 
@@ -44,12 +45,11 @@ def employeeCreate(request):
 
 @api_view(['POST'])
 def employeeUpdate(request, id):
-    employee = Employee.objects.get(id=id)
-
-    # check is employee exists
-    if employee is None:
-        # employee does not exist. Return status code 404
+    try:
+        employee = Employee.objects.get(id=id)
+    except Employee.DoesNotExist:
         return Response("Not found", status=404)
+
 
     serializer = EmployeeSerializer(instance=employee, data=request.data)
     if serializer.is_valid():
@@ -61,7 +61,10 @@ def employeeUpdate(request, id):
 
 @api_view(['DELETE'])
 def employeeArchive(request, id):
-    employee = Employee.objects.get(id=id)
+    try:
+        employee = Employee.objects.get(id=id)
+    except Employee.DoesNotExist:
+        return Response("Not found", status=404)
 
     # convert the employee object to dict
     arch = Converter.employee_to_archive(employee)    
